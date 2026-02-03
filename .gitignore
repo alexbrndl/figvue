@@ -15,8 +15,7 @@ public/index.html
 public/code.js
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode
 .idea
 .DS_Store
 *.suo
