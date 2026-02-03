@@ -1,16 +1,116 @@
-# Vue 3 + TypeScript + Vite
+# Figvue
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A boilerplate for creating Figma plugins using [Vue 3](https://vuejs.org/) + TypeScript + [Vite](https://vitejs.dev/).
+
+Inspired by [figsvelte](https://github.com/thomas-lowry/figsvelte).
+
+## Features
+
+- **Vue 3** with `<script setup>` SFCs
+- **TypeScript** for both the UI and the plugin code
+- **Vite** for fast builds with single-file HTML output
+- **esbuild** to compile the plugin sandbox code
+
+## Quick start
+
+```bash
+npx degit alexbrndl/figvue my-figma-plugin
+cd my-figma-plugin
+npm install
+npm run build
+```
+
+Then connect your plugin to Figma:
+
+1. Open the **Figma desktop app**
+2. Go to `Plugins` > `Development` > `Import plugin from manifest…`
+3. Select the `public/manifest.json` file from this project
+4. Update the plugin name in `public/manifest.json`
+
+## Development
+
+```bash
+npm run dev
+```
+
+This starts two watchers in parallel:
+- **UI**: Vite watches `src/` and rebuilds `public/index.html` (single-file)
+- **Plugin code**: esbuild watches `src/code.ts` and rebuilds `public/code.js`
+
+After each change, re-run your plugin in Figma to see updates.
+
+## Production build
+
+```bash
+npm run build
+```
+
+Runs TypeScript type-checking, then builds both the UI and the plugin code with minification.
+
+## Project structure
+
+```
+├── src/
+│   ├── components/
+│   │   └── Button.vue          # Example reusable component
+│   ├── styles/
+│   │   └── global.css          # Global styles (body reset, Figma fonts)
+│   ├── Plugin.vue              # Main plugin UI component
+│   ├── code.ts                 # Figma plugin sandbox code (TypeScript)
+│   ├── main.ts                 # Vue app entry point
+│   └── env.d.ts                # TypeScript declarations for Vite + Vue
+├── public/                     # Build output + manifest (link Figma here)
+│   ├── manifest.json           # Figma plugin manifest (source file)
+│   ├── index.html              # [generated] UI compiled as single-file
+│   └── code.js                 # [generated] Plugin sandbox compiled
+├── index.html                  # HTML template for Vite
+├── vite.config.ts              # Vite configuration
+├── tsconfig.json               # TypeScript config (UI)
+├── tsconfig.plugin.json        # TypeScript config (plugin sandbox)
+├── tsconfig.node.json          # TypeScript config (vite.config.ts)
+└── package.json
+```
+
+## How it works
+
+Figma plugins have two parts:
+
+1. **Plugin sandbox** (`src/code.ts`) — runs in Figma's main thread with access to the `figma` API. No DOM access.
+2. **UI** (`src/Plugin.vue`) — runs in an `<iframe>` with full DOM/browser access. Communicates with the sandbox via `postMessage`.
+
+### Sending messages from UI to plugin
+
+```ts
+parent.postMessage({ pluginMessage: { type: 'my-action', data: 42 } }, '*')
+```
+
+### Receiving messages in the plugin
+
+```ts
+figma.ui.onmessage = (msg) => {
+  if (msg.type === 'my-action') {
+    // Use the Figma API here
+  }
+}
+```
+
+### Sending messages from plugin to UI
+
+```ts
+figma.ui.postMessage({ type: 'result', data: 'hello' })
+```
+
+### Receiving messages in the UI (Vue)
+
+```ts
+window.onmessage = (event) => {
+  const msg = event.data.pluginMessage
+  if (msg?.type === 'result') {
+    // Update your Vue state here
+  }
+}
+```
 
 ## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
-
-## Type Support For `.vue` Imports in TS
-
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
-
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
-
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+[VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)

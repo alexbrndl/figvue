@@ -1,11 +1,13 @@
 {
-  "name": "figma-plugin-vue",
-  "version": "0.0.0",
+  "name": "figvue",
+  "version": "1.0.0",
+  "description": "A boilerplate for creating Figma plugins with Vue",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:ui": "vite build --watch",
+    "dev:plugin": "esbuild src/code.ts --outfile=public/code.js --bundle --watch",
+    "build": "vue-tsc --noEmit && vite build && rm -rf public/assets && esbuild src/code.ts --outfile=public/code.js --bundle --minify"
   },
   "dependencies": {
     "vue": "^3.2.37"
@@ -13,9 +15,10 @@
   "devDependencies": {
     "@figma/plugin-typings": "^1.47.0",
     "@vitejs/plugin-vue": "^2.3.3",
+    "concurrently": "^8.2.0",
+    "esbuild": "^0.18.0",
     "typescript": "^4.7.3",
     "vite": "^2.9.11",
-    "vite-plugin-html": "^3.2.0",
     "vite-plugin-singlefile": "^0.9.0",
     "vue-tsc": "^0.37.3"
   }
