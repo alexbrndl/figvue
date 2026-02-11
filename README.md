@@ -1,30 +1,60 @@
-# Figvue
+# figvue
 
-A boilerplate for creating Figma plugins using [Vue 3](https://vuejs.org/) + TypeScript + [Vite](https://vitejs.dev/).
+A boilerplate for creating Figma plugins using Vue 3, TypeScript, and Vite.
 
 Inspired by [figsvelte](https://github.com/thomas-lowry/figsvelte).
 
-## Features
+## Project Structure
 
-- **Vue 3** with `<script setup>` SFCs
-- **TypeScript** for both the UI and the plugin code
-- **Vite** for fast builds with single-file HTML output
-- **esbuild** to compile the plugin sandbox code
+```
+src/
+  types/
+    index.ts                  # Shared types (sandbox + UI)
+  sandbox/                    # Figma sandbox (backend)
+    code.ts                   # Entry point, message handler
+    lib/                      # Utility functions
+  ui/                         # Vue app (frontend)
+    App.vue                   # Main plugin UI
+    main.ts                   # Vue entry point
+    components/
+      Button.vue              # Example button component
+    composables/              # Vue composables
+    lib/                      # UI utility functions
+    styles/
+      global.css              # Global styles & reset
+  env.d.ts                    # TypeScript declarations
+public/
+  manifest.json               # Figma plugin manifest
+  index.html                  # [generated] UI (single-file)
+  code.js                     # [generated] Sandbox (bundled)
+```
 
-## Quick start
+### Architecture
+
+The plugin follows Figma's dual-context model:
+
+- **Sandbox** (`src/sandbox/`) runs in Figma's main thread with access to the Figma API. No DOM. Bundled by esbuild (ES2017).
+- **UI** (`src/ui/`) runs in an iframe with full DOM/browser access. Built with Vue 3 + Vite (single-file HTML output).
+- **Types** (`src/types/`) are shared between both contexts (erased at compile time).
+
+Communication between sandbox and UI uses `postMessage`.
+
+## Getting Started
 
 ```bash
-npx degit alexbrndl/figvue my-figma-plugin
-cd my-figma-plugin
+# Clone the template
+npx degit alexbrndl/figvue my-plugin
+cd my-plugin
+
+# Install dependencies
 npm install
-npm run build
 ```
 
 Then connect your plugin to Figma:
 
 1. Open the **Figma desktop app**
-2. Go to `Plugins` > `Development` > `Import plugin from manifest…`
-3. Select the `public/manifest.json` file from this project
+2. Go to `Plugins` > `Development` > `Import plugin from manifest...`
+3. Select `public/manifest.json`
 4. Update the plugin name in `public/manifest.json`
 
 ## Development
@@ -34,67 +64,44 @@ npm run dev
 ```
 
 This starts two watchers in parallel:
-- **UI**: Vite watches `src/` and rebuilds `public/index.html` (single-file)
-- **Plugin code**: esbuild watches `src/code.ts` and rebuilds `public/code.js`
+- **UI**: Vite watches `src/ui/` and rebuilds `public/index.html`
+- **Sandbox**: esbuild watches `src/sandbox/code.ts` and rebuilds `public/code.js`
 
 After each change, re-run your plugin in Figma to see updates.
 
-## Production build
+## Production Build
 
 ```bash
 npm run build
 ```
 
-Runs TypeScript type-checking, then builds both the UI and the plugin code with minification.
+Runs TypeScript type-checking, then builds both the UI and sandbox code with minification.
 
-## Project structure
+## How It Works
 
-```
-├── src/
-│   ├── components/
-│   │   └── Button.vue          # Example reusable component
-│   ├── styles/
-│   │   └── global.css          # Global styles (body reset, Figma fonts)
-│   ├── Plugin.vue              # Main plugin UI component
-│   ├── code.ts                 # Figma plugin sandbox code (TypeScript)
-│   ├── main.ts                 # Vue app entry point
-│   └── env.d.ts                # TypeScript declarations for Vite + Vue
-├── public/                     # Build output + manifest (link Figma here)
-│   ├── manifest.json           # Figma plugin manifest (source file)
-│   ├── index.html              # [generated] UI compiled as single-file
-│   └── code.js                 # [generated] Plugin sandbox compiled
-├── index.html                  # HTML template for Vite
-├── vite.config.ts              # Vite configuration
-├── tsconfig.json               # TypeScript config (UI)
-├── tsconfig.plugin.json        # TypeScript config (plugin sandbox)
-├── tsconfig.node.json          # TypeScript config (vite.config.ts)
-└── package.json
-```
+Figma plugins have two isolated contexts:
 
-## How it works
-
-Figma plugins have two parts:
-
-1. **Plugin sandbox** (`src/code.ts`) — runs in Figma's main thread with access to the `figma` API. No DOM access.
-2. **UI** (`src/Plugin.vue`) — runs in an `<iframe>` with full DOM/browser access. Communicates with the sandbox via `postMessage`.
-
-### Sending messages from UI to plugin
+### Sending messages from UI to sandbox
 
 ```ts
-parent.postMessage({ pluginMessage: { type: 'my-action', data: 42 } }, '*')
+// In a Vue component (<script setup>)
+const message: PluginMessage = { type: 'create-shapes', count: 5, shape: 'rectangle' }
+parent.postMessage({ pluginMessage: message }, '*')
 ```
 
-### Receiving messages in the plugin
+### Receiving messages in the sandbox
 
 ```ts
-figma.ui.onmessage = (msg) => {
-  if (msg.type === 'my-action') {
+// In src/sandbox/code.ts
+figma.ui.onmessage = (msg: unknown) => {
+  const message = msg as PluginMessage
+  if (message.type === 'create-shapes') {
     // Use the Figma API here
   }
 }
 ```
 
-### Sending messages from plugin to UI
+### Sending messages from sandbox to UI
 
 ```ts
 figma.ui.postMessage({ type: 'result', data: 'hello' })
@@ -111,6 +118,10 @@ window.onmessage = (event) => {
 }
 ```
 
-## Recommended IDE Setup
 
-[VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+## Tech Stack
+
+- **Vue 3** with `<script setup>` SFCs
+- **TypeScript** for both UI and sandbox
+- **Vite** + **vite-plugin-singlefile** for UI bundling
+- **esbuild** for sandbox bundling

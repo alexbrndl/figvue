@@ -1,20 +1,23 @@
 /// <reference types="@figma/plugin-typings" />
+import type { PluginMessage } from '../types';
 
 figma.showUI(__html__, { themeColors: true, width: 300, height: 200 });
 
-figma.ui.onmessage = (msg: { type: string; count?: number; shape?: string }) => {
-  if (msg.type === 'create-shapes') {
+figma.ui.onmessage = (msg: unknown) => {
+  const message = msg as PluginMessage;
+
+  if (message.type === 'create-shapes') {
     const nodes: SceneNode[] = [];
 
-    for (let i = 0; i < (msg.count || 1); i++) {
-      let shape;
+    for (let i = 0; i < message.count; i++) {
+      let shape: RectangleNode | EllipseNode | PolygonNode;
 
-      if (msg.shape === 'rectangle') {
+      if (message.shape === 'rectangle') {
         shape = figma.createRectangle();
-      } else if (msg.shape === 'triangle') {
-        shape = figma.createPolygon();
-      } else {
+      } else if (message.shape === 'ellipse') {
         shape = figma.createEllipse();
+      } else {
+        shape = figma.createPolygon();
       }
 
       shape.x = i * 150;
@@ -25,7 +28,10 @@ figma.ui.onmessage = (msg: { type: string; count?: number; shape?: string }) => 
 
     figma.currentPage.selection = nodes;
     figma.viewport.scrollAndZoomIntoView(nodes);
+    figma.closePlugin();
   }
 
-  figma.closePlugin();
+  if (message.type === 'cancel') {
+    figma.closePlugin();
+  }
 };

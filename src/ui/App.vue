@@ -1,25 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Button from './components/Button.vue'
+import type { PluginMessage } from '../types'
 
 const count = ref(5)
-const shape = ref('rectangle')
+const shape = ref<'rectangle' | 'triangle' | 'ellipse'>('rectangle')
 
 function create() {
-  parent.postMessage(
-    {
-      pluginMessage: {
-        type: 'create-shapes',
-        count: count.value,
-        shape: shape.value,
-      },
-    },
-    '*'
-  )
+  const message: PluginMessage = {
+    type: 'create-shapes',
+    count: count.value,
+    shape: shape.value,
+  }
+  parent.postMessage({ pluginMessage: message }, '*')
 }
 
 function cancel() {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
+  const message: PluginMessage = { type: 'cancel' }
+  parent.postMessage({ pluginMessage: message }, '*')
 }
 </script>
 

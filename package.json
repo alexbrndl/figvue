@@ -3,23 +3,26 @@
   "version": "1.0.0",
   "description": "A boilerplate for creating Figma plugins with Vue",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "concurrently \"npm:dev:*\"",
     "dev:ui": "vite build --watch",
-    "dev:plugin": "esbuild src/code.ts --outfile=public/code.js --bundle --watch",
-    "build": "vue-tsc --noEmit && vite build && rm -rf public/assets && esbuild src/code.ts --outfile=public/code.js --bundle --minify"
+    "dev:plugin": "esbuild src/sandbox/code.ts --outfile=public/code.js --bundle --target=es2017 --watch",
+    "build": "vue-tsc --noEmit && vite build && rm -rf public/assets && esbuild src/sandbox/code.ts --outfile=public/code.js --bundle --minify --target=es2017"
   },
   "dependencies": {
-    "vue": "^3.2.37"
+    "vue": "^3.5.28"
   },
   "devDependencies": {
-    "@figma/plugin-typings": "^1.47.0",
-    "@vitejs/plugin-vue": "^2.3.3",
-    "concurrently": "^8.2.0",
-    "esbuild": "^0.18.0",
-    "typescript": "^4.7.3",
-    "vite": "^2.9.11",
-    "vite-plugin-singlefile": "^0.9.0",
-    "vue-tsc": "^0.37.3"
+    "@figma/plugin-typings": "^1.123.0",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-singlefile": "^2.3.0",
+    "vue-tsc": "^3.2.4"
   }
 }
