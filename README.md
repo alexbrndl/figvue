@@ -1,5 +1,10 @@
 # figvue
 
+![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white)
+![Figma](https://img.shields.io/badge/Figma_Plugin-F24E1E?style=for-the-badge&logo=figma&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+
 A boilerplate for creating Figma plugins using Vue 3, TypeScript, and Vite.
 
 Inspired by [figsvelte](https://github.com/thomas-lowry/figsvelte).
